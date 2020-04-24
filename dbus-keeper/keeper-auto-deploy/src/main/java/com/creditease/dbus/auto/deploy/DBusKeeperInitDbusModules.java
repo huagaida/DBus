@@ -45,6 +45,7 @@ public class DBusKeeperInitDbusModules {
         System.out.println("初始化dbus其他配置...");
         String url = "http://localhost:" + pro.getProperty("mgr.server.port") + "/init/initBasicModule";
         LinkedHashMap<String, String> param = new LinkedHashMap<>();
+        param.put("deploy.thin",pro.getProperty("deploy.thin"));
         param.put("dbus.cluster.server.list", pro.getProperty("dbus.cluster.server.list"));
         param.put("dbus.cluster.server.ssh.user", pro.getProperty("dbus.cluster.server.ssh.user"));
         param.put("dbus.cluster.server.ssh.port", pro.getProperty("dbus.cluster.server.ssh.port"));

@@ -82,6 +82,7 @@ public class KeeperConstants {
     /**
      * global.properties
      */
+    public static final String GLOBAL_CONF_KEY_DEPLOY_THIN = "deploy.thin";
     public static final String GLOBAL_CONF_KEY_CLUSTER_SERVER_LIST = "dbus.cluster.server.list";
     public static final String GLOBAL_CONF_KEY_CLUSTER_SERVER_SSH_USER = "dbus.cluster.server.ssh.user";
     public static final String GLOBAL_CONF_KEY_CLUSTER_SERVER_SSH_PORT = "dbus.cluster.server.ssh.port";

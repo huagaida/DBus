@@ -66,6 +66,7 @@ public class DBusInitService {
     public ResultEntity initBasicModule(LinkedHashMap<String, String> map) throws Exception {
         ResultEntity resultEntity = new ResultEntity();
         Boolean initialized = isInitialized();
+        boolean deployThin = Boolean.parseBoolean(map.get(KeeperConstants.GLOBAL_CONF_KEY_DEPLOY_THIN));
 
         //检测配置数据是否正确
         if (checkParams(resultEntity, map).getStatus() != 0) {
@@ -79,34 +80,36 @@ public class DBusInitService {
             return resultEntity;
         }
 
-        //初始化心跳
-        if (initHeartBeat(resultEntity, map, initialized).getStatus() != 0) {
-            logger.error(resultEntity.getMessage());
-            return resultEntity;
-        }
-
-        //初始化storm
-        if (initStormJars(resultEntity, map, initialized).getStatus() != 0) {
-            logger.error(resultEntity.getMessage());
-            return resultEntity;
-        }
-
         //模板sink添加
         if (initDefaultSink(map).getStatus() != 0) {
             logger.error(resultEntity.getMessage());
             return resultEntity;
         }
 
-        //Influxdb初始化
-        if (initInfluxdb(resultEntity, map).getStatus() != 0) {
-            logger.error(resultEntity.getMessage());
-            return resultEntity;
-        }
+        if(!deployThin){
+            //初始化心跳
+            if (initHeartBeat(resultEntity, map, initialized).getStatus() != 0) {
+                logger.error(resultEntity.getMessage());
+                return resultEntity;
+            }
 
-        //Grafana初始化
-        if (initGrafana(resultEntity, map).getStatus() != 0) {
-            logger.error(resultEntity.getMessage());
-            return resultEntity;
+            //初始化storm
+            if (initStormJars(resultEntity, map, initialized).getStatus() != 0) {
+                logger.error(resultEntity.getMessage());
+                return resultEntity;
+            }
+
+            //Influxdb初始化
+            if (initInfluxdb(resultEntity, map).getStatus() != 0) {
+                logger.error(resultEntity.getMessage());
+                return resultEntity;
+            }
+
+            //Grafana初始化
+            if (initGrafana(resultEntity, map).getStatus() != 0) {
+                logger.error(resultEntity.getMessage());
+                return resultEntity;
+            }
         }
 
         logger.info("初始化dbus基础模块完成.");
@@ -394,7 +397,14 @@ public class DBusInitService {
             }
         }
         logger.info("bootstrap.servers:{}测试通过", bootstrapServers);
+        boolean deployThin = Boolean.parseBoolean(map.get(KeeperConstants.GLOBAL_CONF_KEY_DEPLOY_THIN));
+        if(!deployThin){
+            checkMore(resultEntity, map);
+        }
+        return resultEntity;
+    }
 
+    public ResultEntity checkMore(ResultEntity resultEntity, LinkedHashMap<String, String> map){
         //Grafana检测
         String monitUrl = map.get(KeeperConstants.GLOBAL_CONF_KEY_GRAFANA_DBUS_URL);
         if (!configCenterService.urlTest(monitUrl)) {

@@ -46,12 +46,15 @@ import java.util.Properties;
 public class DBusKeeperInitAll {
 
     private static String pubKeyPath;
-
+    private static boolean deployThin = false;
     public static void main(String[] args) {
         try {
             Properties pro = ConfigUtils.loadConfig();
+            deployThin = Boolean.parseBoolean(pro.getProperty("deploy.thin"));
             checkConfig(pro);
-            checkSSH(pro);
+            if(!deployThin) {
+                checkSSH(pro);
+            }
             initDbusMgr(pro);
             InitDBusInitNode(pro);
             DBusKeeperInitJars.initLibJars(pro);
@@ -72,7 +75,9 @@ public class DBusKeeperInitAll {
         checkNginx(pro);
         checkDatabase(pro);
         checkKafka(pro);
-        checInflux(pro);
+        if(!deployThin){
+            checInflux(pro);
+        }
         checkZK(pro);
     }
 
@@ -332,80 +337,127 @@ public class DBusKeeperInitAll {
         if (StringUtils.isBlank(pro.getProperty("bootstrap.servers.version"))) {
             throw new RuntimeException("bootstrap.servers.version不能为空");
         }
-        String grafanaWebUrl = pro.getProperty("grafana.web.url");
-        if (StringUtils.isBlank(grafanaWebUrl)) {
-            throw new RuntimeException("grafana.web.url不能为空");
+        if(!deployThin){
+            String grafanaWebUrl = pro.getProperty("grafana.web.url");
+            if (StringUtils.isBlank(grafanaWebUrl)) {
+                throw new RuntimeException("grafana.web.url不能为空");
+            }
+            if (StringUtils.contains(grafanaWebUrl, "必须修改") || !StringUtils.contains(grafanaWebUrl, ":")
+                    || !StringUtils.startsWith(grafanaWebUrl, "http://")) {
+                throw new RuntimeException("grafana.web.url格式不正确,正确格式[http://ip:port或者http://域名]");
+            }
+            String grafanaDbusUrl = pro.getProperty("grafana.dbus.url");
+            if (StringUtils.isBlank(grafanaDbusUrl)) {
+                throw new RuntimeException("grafana.dbus.url不能为空");
+            }
+            if (StringUtils.contains(grafanaDbusUrl, "必须修改") || !StringUtils.contains(grafanaDbusUrl, ":")
+                    || !StringUtils.startsWith(grafanaDbusUrl, "http://")) {
+                throw new RuntimeException("grafana.dbus.url格式不正确,正确格式[http://ip:port],默认端口号3000");
+            }
+            String grafanaToken = pro.getProperty("grafana.token");
+            if (StringUtils.isBlank(grafanaToken)) {
+                throw new RuntimeException("grafana.token不能为空");
+            }
+            if (StringUtils.contains(grafanaToken, "必须修改")) {
+                throw new RuntimeException("grafana.token格式不正确");
+            }
+            String influxdbWebUrl = pro.getProperty("influxdb.web.url");
+            if (StringUtils.isBlank(influxdbWebUrl)) {
+                throw new RuntimeException("influxdb.web.url不能为空");
+            }
+            if (StringUtils.contains(influxdbWebUrl, "必须修改") || !StringUtils.contains(influxdbWebUrl, ":")
+                    || !StringUtils.startsWith(influxdbWebUrl, "http://")) {
+                throw new RuntimeException("influxdb.web.url格式不正确,正确格式[http://ip:port],默认端口号8086");
+            }
+            String influxdbDbusUrl = pro.getProperty("influxdb.dbus.url");
+            if (StringUtils.isBlank(influxdbDbusUrl)) {
+                throw new RuntimeException("influxdb.dbus.url不能为空");
+            }
+            if (StringUtils.contains(influxdbDbusUrl, "必须修改") || !StringUtils.contains(influxdbDbusUrl, ":")
+                    || !StringUtils.startsWith(influxdbDbusUrl, "http://")) {
+                throw new RuntimeException("influxdb.dbus.url格式不正确,正确格式[http://ip:port]");
+            }
+            String nimbusHost = pro.getProperty("storm.nimbus.host");
+            if (StringUtils.isBlank(nimbusHost)) {
+                throw new RuntimeException("storm.nimbus.host不能为空");
+            }
+            if (StringUtils.contains(nimbusHost, "必须修改")) {
+                throw new RuntimeException("storm.nimbus.host格式不正确");
+            }
+            String nimbusHomePath = pro.getProperty("storm.nimbus.home.path");
+            if (StringUtils.isBlank(nimbusHomePath)) {
+                throw new RuntimeException("storm.nimbus.home.path");
+            }
+            if (StringUtils.contains(nimbusHomePath, "必须修改") || !StringUtils.startsWith(nimbusHomePath, "/")) {
+                throw new RuntimeException("storm.nimbus.home.path格式不正确,必须是全路径");
+            }
+            String nimbusLogPath = pro.getProperty("storm.nimbus.log.path");
+            if (StringUtils.isBlank(nimbusLogPath)) {
+                throw new RuntimeException("storm.nimbus.log.path");
+            }
+            if (StringUtils.contains(nimbusLogPath, "必须修改") || !StringUtils.startsWith(nimbusLogPath, "/")) {
+                throw new RuntimeException("storm.nimbus.log.path格式不正确,必须是全路径");
+            }
+            String stormRestUrl = pro.getProperty("storm.rest.url");
+            if (StringUtils.isBlank(stormRestUrl)) {
+                throw new RuntimeException("storm.rest.url不能为空");
+            }
+            if (StringUtils.contains(stormRestUrl, "必须修改") || !StringUtils.contains(stormRestUrl, ":") || !StringUtils.startsWith(stormRestUrl, "http://")) {
+                throw new RuntimeException("storm.rest.url格式不正确,正确格式[http://ip:port/api/v1]");
+            }
+            String stormZookeeperRoot = pro.getProperty("storm.zookeeper.root");
+            if (StringUtils.isBlank(stormZookeeperRoot)) {
+                throw new RuntimeException("storm.zookeeper.root不能为空");
+            }
+            if (StringUtils.contains(stormZookeeperRoot, "必须修改")) {
+                throw new RuntimeException("storm.zookeeper.root格式不正确");
+            }
+            String heartbeatHost = pro.getProperty("heartbeat.host");
+            if (StringUtils.isBlank(heartbeatHost)) {
+                throw new RuntimeException("heartbeat.host不能为空");
+            }
+            if (StringUtils.contains(heartbeatHost, "必须修改")) {
+                throw new RuntimeException("heartbeat.host格式不正确,正确格式[ip1,ip2]");
+            }
+            String heartbeatPath = pro.getProperty("heartbeat.path");
+            if (StringUtils.isBlank(heartbeatPath)) {
+                throw new RuntimeException("heartbeat.path不能为空");
+            }
+            if (StringUtils.contains(heartbeatPath, "必须修改") || !StringUtils.startsWith(heartbeatPath, "/")) {
+                throw new RuntimeException("heartbeat.path格式不正确,必须是全路径");
+            }
+            String clusterList = pro.getProperty("dbus.cluster.server.list");
+            if (StringUtils.isBlank(clusterList)) {
+                throw new RuntimeException("dbus.cluster.server.list不能为空");
+            }
+            if (StringUtils.contains(clusterList, "必须修改")) {
+                throw new RuntimeException("dbus.cluster.server.list格式不正确");
+            }
+            String clusterUser = pro.getProperty("dbus.cluster.server.ssh.user");
+            if (StringUtils.isBlank(clusterUser)) {
+                throw new RuntimeException("dbus.cluster.server.ssh.user不能为空");
+            }
+            if (StringUtils.contains(clusterUser, "必须修改")) {
+                throw new RuntimeException("dbus.cluster.server.ssh.user格式不正确");
+            }
+            String clusterPort = pro.getProperty("dbus.cluster.server.ssh.port");
+            if (StringUtils.isBlank(clusterPort)) {
+                throw new RuntimeException("dbus.cluster.server.ssh.port不能为空");
+            }
+            if (StringUtils.contains(clusterPort, "必须修改")) {
+                throw new RuntimeException("dbus.cluster.server.ssh.port格式不正确");
+            }
+            List<String> clusters = Arrays.asList(StringUtils.split(clusterList, ","));
+            if (!clusters.contains(nimbusHost)) {
+                throw new RuntimeException("storm.nimbus.host必须部署在dbus.cluster.server.list集群列表内");
+            }
+            for (String host : StringUtils.split(heartbeatHost, ",")) {
+                if (!clusters.contains(host)) {
+                    throw new RuntimeException("heartbeat.host必须部署在dbus.cluster.server.list集群列表内");
+                }
+            }
         }
-        if (StringUtils.contains(grafanaWebUrl, "必须修改") || !StringUtils.contains(grafanaWebUrl, ":")
-                || !StringUtils.startsWith(grafanaWebUrl, "http://")) {
-            throw new RuntimeException("grafana.web.url格式不正确,正确格式[http://ip:port或者http://域名]");
-        }
-        String grafanaDbusUrl = pro.getProperty("grafana.dbus.url");
-        if (StringUtils.isBlank(grafanaDbusUrl)) {
-            throw new RuntimeException("grafana.dbus.url不能为空");
-        }
-        if (StringUtils.contains(grafanaDbusUrl, "必须修改") || !StringUtils.contains(grafanaDbusUrl, ":")
-                || !StringUtils.startsWith(grafanaDbusUrl, "http://")) {
-            throw new RuntimeException("grafana.dbus.url格式不正确,正确格式[http://ip:port],默认端口号3000");
-        }
-        String grafanaToken = pro.getProperty("grafana.token");
-        if (StringUtils.isBlank(grafanaToken)) {
-            throw new RuntimeException("grafana.token不能为空");
-        }
-        if (StringUtils.contains(grafanaToken, "必须修改")) {
-            throw new RuntimeException("grafana.token格式不正确");
-        }
-        String influxdbWebUrl = pro.getProperty("influxdb.web.url");
-        if (StringUtils.isBlank(influxdbWebUrl)) {
-            throw new RuntimeException("influxdb.web.url不能为空");
-        }
-        if (StringUtils.contains(influxdbWebUrl, "必须修改") || !StringUtils.contains(influxdbWebUrl, ":")
-                || !StringUtils.startsWith(influxdbWebUrl, "http://")) {
-            throw new RuntimeException("influxdb.web.url格式不正确,正确格式[http://ip:port],默认端口号8086");
-        }
-        String influxdbDbusUrl = pro.getProperty("influxdb.dbus.url");
-        if (StringUtils.isBlank(influxdbDbusUrl)) {
-            throw new RuntimeException("influxdb.dbus.url不能为空");
-        }
-        if (StringUtils.contains(influxdbDbusUrl, "必须修改") || !StringUtils.contains(influxdbDbusUrl, ":")
-                || !StringUtils.startsWith(influxdbDbusUrl, "http://")) {
-            throw new RuntimeException("influxdb.dbus.url格式不正确,正确格式[http://ip:port]");
-        }
-        String nimbusHost = pro.getProperty("storm.nimbus.host");
-        if (StringUtils.isBlank(nimbusHost)) {
-            throw new RuntimeException("storm.nimbus.host不能为空");
-        }
-        if (StringUtils.contains(nimbusHost, "必须修改")) {
-            throw new RuntimeException("storm.nimbus.host格式不正确");
-        }
-        String nimbusHomePath = pro.getProperty("storm.nimbus.home.path");
-        if (StringUtils.isBlank(nimbusHomePath)) {
-            throw new RuntimeException("storm.nimbus.home.path");
-        }
-        if (StringUtils.contains(nimbusHomePath, "必须修改") || !StringUtils.startsWith(nimbusHomePath, "/")) {
-            throw new RuntimeException("storm.nimbus.home.path格式不正确,必须是全路径");
-        }
-        String nimbusLogPath = pro.getProperty("storm.nimbus.log.path");
-        if (StringUtils.isBlank(nimbusLogPath)) {
-            throw new RuntimeException("storm.nimbus.log.path");
-        }
-        if (StringUtils.contains(nimbusLogPath, "必须修改") || !StringUtils.startsWith(nimbusLogPath, "/")) {
-            throw new RuntimeException("storm.nimbus.log.path格式不正确,必须是全路径");
-        }
-        String stormRestUrl = pro.getProperty("storm.rest.url");
-        if (StringUtils.isBlank(stormRestUrl)) {
-            throw new RuntimeException("storm.rest.url不能为空");
-        }
-        if (StringUtils.contains(stormRestUrl, "必须修改") || !StringUtils.contains(stormRestUrl, ":") || !StringUtils.startsWith(stormRestUrl, "http://")) {
-            throw new RuntimeException("storm.rest.url格式不正确,正确格式[http://ip:port/api/v1]");
-        }
-        String stormZookeeperRoot = pro.getProperty("storm.zookeeper.root");
-        if (StringUtils.isBlank(stormZookeeperRoot)) {
-            throw new RuntimeException("storm.zookeeper.root不能为空");
-        }
-        if (StringUtils.contains(stormZookeeperRoot, "必须修改")) {
-            throw new RuntimeException("storm.zookeeper.root格式不正确");
-        }
+
         String zkStr = pro.getProperty("zk.str");
         if (StringUtils.isBlank(zkStr)) {
             throw new RuntimeException("zk.str不能为空");
@@ -413,20 +465,7 @@ public class DBusKeeperInitAll {
         if (StringUtils.contains(zkStr, "必须修改") || !StringUtils.contains(zkStr, ":")) {
             throw new RuntimeException("zk.str格式不正确,正确格式[ip1:port,ip2:port]");
         }
-        String heartbeatHost = pro.getProperty("heartbeat.host");
-        if (StringUtils.isBlank(heartbeatHost)) {
-            throw new RuntimeException("heartbeat.host不能为空");
-        }
-        if (StringUtils.contains(heartbeatHost, "必须修改")) {
-            throw new RuntimeException("heartbeat.host格式不正确,正确格式[ip1,ip2]");
-        }
-        String heartbeatPath = pro.getProperty("heartbeat.path");
-        if (StringUtils.isBlank(heartbeatPath)) {
-            throw new RuntimeException("heartbeat.path不能为空");
-        }
-        if (StringUtils.contains(heartbeatPath, "必须修改") || !StringUtils.startsWith(heartbeatPath, "/")) {
-            throw new RuntimeException("heartbeat.path格式不正确,必须是全路径");
-        }
+
         String nginxIp = pro.getProperty("nginx.ip");
         if (StringUtils.isBlank(nginxIp)) {
             throw new RuntimeException("nginx.ip不能为空");
@@ -441,36 +480,7 @@ public class DBusKeeperInitAll {
         if (StringUtils.contains(nginxPort, "必须修改")) {
             throw new RuntimeException("nginx.port格式不正确");
         }
-        String clusterList = pro.getProperty("dbus.cluster.server.list");
-        if (StringUtils.isBlank(clusterList)) {
-            throw new RuntimeException("dbus.cluster.server.list不能为空");
-        }
-        if (StringUtils.contains(clusterList, "必须修改")) {
-            throw new RuntimeException("dbus.cluster.server.list格式不正确");
-        }
-        String clusterUser = pro.getProperty("dbus.cluster.server.ssh.user");
-        if (StringUtils.isBlank(clusterUser)) {
-            throw new RuntimeException("dbus.cluster.server.ssh.user不能为空");
-        }
-        if (StringUtils.contains(clusterUser, "必须修改")) {
-            throw new RuntimeException("dbus.cluster.server.ssh.user格式不正确");
-        }
-        String clusterPort = pro.getProperty("dbus.cluster.server.ssh.port");
-        if (StringUtils.isBlank(clusterPort)) {
-            throw new RuntimeException("dbus.cluster.server.ssh.port不能为空");
-        }
-        if (StringUtils.contains(clusterPort, "必须修改")) {
-            throw new RuntimeException("dbus.cluster.server.ssh.port格式不正确");
-        }
-        List<String> clusters = Arrays.asList(StringUtils.split(clusterList, ","));
-        if (!clusters.contains(nimbusHost)) {
-            throw new RuntimeException("storm.nimbus.host必须部署在dbus.cluster.server.list集群列表内");
-        }
-        for (String host : StringUtils.split(heartbeatHost, ",")) {
-            if (!clusters.contains(host)) {
-                throw new RuntimeException("heartbeat.host必须部署在dbus.cluster.server.list集群列表内");
-            }
-        }
+
 
     }
 

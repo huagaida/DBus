@@ -71,6 +71,17 @@ public class DBusInitController extends BaseController {
     }
 
     private boolean checkParams(@RequestBody LinkedHashMap<String, String> map, ResultEntity resultEntity) {
+        boolean deployThin = Boolean.parseBoolean(map.get(KeeperConstants.GLOBAL_CONF_KEY_DEPLOY_THIN));
+        boolean checkResult = checkParamsBasic(map, resultEntity);
+        if(checkResult) return checkResult;
+
+        if(!deployThin){
+            checkResult = checkParamsMore(map, resultEntity);
+        }
+        return checkResult;
+    }
+
+    private boolean checkParamsBasic(@RequestBody LinkedHashMap<String, String> map, ResultEntity resultEntity) {
         String clusterList = map.get(KeeperConstants.GLOBAL_CONF_KEY_CLUSTER_SERVER_LIST);
         if (StringUtils.isBlank(clusterList)) {
             resultEntity.setMessage("dbus.cluster.server.list不能为空");
@@ -80,6 +91,33 @@ public class DBusInitController extends BaseController {
             resultEntity.setMessage("dbus.cluster.server.list格式不正确,默认端口22");
             return true;
         }
+
+        String bootstrapServices = map.get(KeeperConstants.GLOBAL_CONF_KEY_BOOTSTRAP_SERVERS);
+        if (StringUtils.isBlank(bootstrapServices)) {
+            resultEntity.setMessage("bootstrap.servers不能为空");
+            return true;
+        }
+        if (StringUtils.contains(bootstrapServices, "必须修改") || !StringUtils.contains(bootstrapServices, ":")) {
+            resultEntity.setMessage("bootstrap.servers格式不正确,正确格式[ip1:port,ip2:port]");
+            return true;
+        }
+        if (StringUtils.isBlank(map.get(KeeperConstants.GLOBAL_CONF_KEY_BOOTSTRAP_SERVERS_VERSION))) {
+            resultEntity.setMessage("bootstrap.servers.version不能为空");
+            return true;
+        }
+        String zkStr = map.get(KeeperConstants.GLOBAL_CONF_KEY_ZK_STR);
+        if (StringUtils.isBlank(zkStr)) {
+            resultEntity.setMessage("zk.str不能为空");
+            return true;
+        }
+        if (StringUtils.contains(zkStr, "必须修改") || !StringUtils.contains(zkStr, ":")) {
+            resultEntity.setMessage("zk.str格式不正确,正确格式[ip1:port,ip2:port]");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkParamsMore(@RequestBody LinkedHashMap<String, String> map, ResultEntity resultEntity) {
         String clusterPort = map.get(KeeperConstants.GLOBAL_CONF_KEY_CLUSTER_SERVER_SSH_PORT);
         if (StringUtils.isBlank(clusterPort)) {
             resultEntity.setMessage("dbus.cluster.server.ssh.port不能为空");
@@ -96,19 +134,6 @@ public class DBusInitController extends BaseController {
         }
         if (StringUtils.contains(clusterUser, "必须修改")) {
             resultEntity.setMessage("dbus.cluster.server.ssh.user格式不正确");
-            return true;
-        }
-        String bootstrapServices = map.get(KeeperConstants.GLOBAL_CONF_KEY_BOOTSTRAP_SERVERS);
-        if (StringUtils.isBlank(bootstrapServices)) {
-            resultEntity.setMessage("bootstrap.servers不能为空");
-            return true;
-        }
-        if (StringUtils.contains(bootstrapServices, "必须修改") || !StringUtils.contains(bootstrapServices, ":")) {
-            resultEntity.setMessage("bootstrap.servers格式不正确,正确格式[ip1:port,ip2:port]");
-            return true;
-        }
-        if (StringUtils.isBlank(map.get(KeeperConstants.GLOBAL_CONF_KEY_BOOTSTRAP_SERVERS_VERSION))) {
-            resultEntity.setMessage("bootstrap.servers.version不能为空");
             return true;
         }
         String grafanaWebUrl = map.get(KeeperConstants.GLOBAL_CONF_KEY_GRAFANA_WEB_URL);
@@ -196,6 +221,7 @@ public class DBusInitController extends BaseController {
             resultEntity.setMessage("storm.rest.url格式不正确,正确格式[http://ip:port/api/v1]");
             return true;
         }
+
         String stormZookeeperRoot = map.get(KeeperConstants.GLOBAL_CONF_KEY_STORM_ZOOKEEPER_ROOT);
         if (StringUtils.isBlank(stormZookeeperRoot)) {
             resultEntity.setMessage("storm.zookeeper.root不能为空");
@@ -203,15 +229,6 @@ public class DBusInitController extends BaseController {
         }
         if (StringUtils.contains(stormZookeeperRoot, "必须修改")) {
             resultEntity.setMessage("storm.zookeeper.root格式不正确");
-            return true;
-        }
-        String zkStr = map.get(KeeperConstants.GLOBAL_CONF_KEY_ZK_STR);
-        if (StringUtils.isBlank(zkStr)) {
-            resultEntity.setMessage("zk.str不能为空");
-            return true;
-        }
-        if (StringUtils.contains(zkStr, "必须修改") || !StringUtils.contains(zkStr, ":")) {
-            resultEntity.setMessage("zk.str格式不正确,正确格式[ip1:port,ip2:port]");
             return true;
         }
         String heartbeatHost = map.get(KeeperConstants.GLOBAL_CONF_KEY_HEARTBEAT_HOST);
@@ -234,5 +251,4 @@ public class DBusInitController extends BaseController {
         }
         return false;
     }
-
 }

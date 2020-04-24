@@ -33,11 +33,11 @@
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.creditease.dbus</groupId>
-            <artifactId>dbus-stream-db2</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.creditease.dbus</groupId>-->
+<!--            <artifactId>dbus-stream-db2</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.creditease.dbus</groupId>
